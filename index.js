@@ -1,44 +1,46 @@
-import fs from "./fs"
+// import fs from "./fs"
 const resultsContainer = document.getElementById('results');
 const formContainer = document.getElementById('formulario');
-const threshold = 0.9;
+const threshold = 0.5;
 
 let model;
 
-const data = JSON.parse(fs.readFileSync('bucket1.json', 'utf8'))
+// const data = JSON.parse(fs.readFileSync('bucket1.json', 'utf8'))
 
-const dataSentences = data.map(entry => entry.text);
-const dataLabels = data.map(entry => {
-    return entry.rating === 'rejected' ? 1 : 0;
-});
+// const dataSentences = data.map(entry => entry.text);
+// const dataLabels = data.map(entry => {
+//     return entry.rating === 'rejected' ? 1 : 0;
+// });
 
-const trainModel = async (sentences, labels) => {
+const trainModel = async () => {
+    console.log('Cargando modelo...');
+    document.getElementById("trainModel").innerHTML = "Cargando modelo...";
     model = await toxicity.load(threshold)
 
-    console.log('Entrenando modelo...');
-    document.getElementById("trainModel").innerHTML = "Entrenando modelo...";
+    // await model.fit(sentences, labels, {
+    //     // batchSize: 32,
+    //     epochs: 10
+    // })
 
-    await model.fit(sentences, labels, {
-        // batchSize: 32,
-        epochs: 10
-    })
-
-    console.log("Entrenamiento finalizado!");
-    document.getElementById("trainModel").innerHTML = "Entrenamiento finalizado!";
+    console.log("Modelo cargado correctamente!");
+    document.getElementById("trainModel").innerHTML = "Modelo cargado correctamente!";
 }
 const evalue = async (sentences) => {
     console.log('Evaluando frases...');
     resultsContainer.innerHTML = 'Evaluando frases...';
     
-    model.classify(sentences).then(predictions => {
+    await model.classify(sentences).then(predictions => {
         console.log(predictions);
-        resultsContainer.innerHTML = JSON.stringify(predictions, null, 2);
+        resultsContainer.innerHTML = ''
+        predictions.forEach(prediction => {
+            resultsContainer.innerHTML += `<strong>${prediction.label}:</strong> ${prediction.results[0].match}</br>`
+        })
     });
 
     console.log('Finalizado!');
 }
 
-document.getElementById("btnTrainModel").addEventListener("click", () => trainModel(dataSentences, dataLabels));
+document.getElementById("btnTrainModel").addEventListener("click", () => trainModel());
 
 formContainer.addEventListener('submit', (e) => {
     e.preventDefault()
